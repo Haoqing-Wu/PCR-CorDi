@@ -12,6 +12,8 @@ from collections import defaultdict
 
 
 def sample_point_from_mesh(model_root,samples):
+    r"""Sample given number of points from a mesh readed from path.
+    """
     mesh = o3d.io.read_triangle_mesh(model_root)
     pcd = mesh.sample_points_uniformly(number_of_points=samples)
     scale_factor = 0.001
@@ -22,6 +24,9 @@ def sample_point_from_mesh(model_root,samples):
     return points, normals
 
 def get_bbox(bbox):
+    r"""Get bounding box from a mask.
+    Return coordinates of the bounding box [x_min, y_min, x_max, y_max]
+    """
     border_list = [-1, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600, 640, 680]
 
     rmin, rmax, cmin, cmax = bbox[1], bbox[1] + bbox[3], bbox[0], bbox[0] + bbox[2]
@@ -55,12 +60,17 @@ def get_bbox(bbox):
 
 
 def mask_to_bbox(mask):
+    r"""Get bounding box from a mask.
+    """
     mask = mask.astype(np.uint8)
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     bbox = cv2.boundingRect(max(contours, key=cv2.contourArea))
     return list(bbox)
 
 def get_gt(gt_file, frame_id):
+    r"""Get ground truth pose from a ground truth file.
+    Return rotation matrix and translation vector
+    """
     with open(gt_file, 'r') as file:
         gt = json.load(file)[str(frame_id)][0]
     rot = np.array(gt['cam_R_m2c']).reshape(3, 3)
@@ -68,6 +78,9 @@ def get_gt(gt_file, frame_id):
     return rot, trans
 
 def get_camera_info(cam_file, frame_id):
+    r"""Get camera intrinsics from a camera file.
+    Return camera center, focal length
+    """
     with open(cam_file, 'r') as file:
         cam = json.load(file)[str(frame_id)]
     cam_k = np.array(cam['cam_K']).reshape(3, 3)
@@ -78,12 +91,16 @@ def get_camera_info(cam_file, frame_id):
     return cam_cx, cam_cy, cam_fx, cam_fy
 
 def resize_pcd(pcd, points_limit):
+    r"""Resize a point cloud to a given number of points.
+    """
     if pcd.shape[0] > points_limit:
         idx = np.random.permutation(pcd.shape[0])[:points_limit]
         pcd = pcd[idx]
     return pcd
 
 def transformation_pcd(pcd, rot, trans):
+    r"""Transform a point cloud with a rotation matrix and a translation vector.
+    """
     pcd_t = np.dot(pcd, rot.T)
     pcd_t = np.add(pcd_t, trans.T)
     return pcd_t
@@ -99,7 +116,8 @@ def get_corr(tgt_pcd, src_pcd, rot, trans, radius):
         [(i, j) for i, indices in enumerate(indices_list) for j in indices],
         dtype=np.int32,
     )
-    return corr
+    covage = corr.shape[0] / tgt_pcd.shape[0]
+    return corr, covage
 
 # test of method get_dataset_from_path
 if __name__ == "__main__":

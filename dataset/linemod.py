@@ -7,7 +7,7 @@ import json
 import numpy.ma as ma
 import torch.utils.data as data
 from scipy.spatial.transform import Rotation
-import random
+import pickle
 from tqdm import tqdm
 from dataset.bop_utils import *
 
@@ -45,9 +45,14 @@ class LMODataset(data.Dataset):
         # view point is the (0,0,0) of cad model
         self.view_point = np.array([0., 0., 0.])  
         # radius used to find the nearest neighbors
-        self.corr_radius = 0.0005
+        self.corr_radius = 0.001
         # loaded data
-        self.data = self.get_dataset_from_path()
+        self.pickle_file = self.base_dir + 'cache/lm.pkl'
+        if args.data_from_pkl:
+            with open(self.pickle_file, 'rb') as f:
+                self.data = pickle.load(f)
+        else:
+            self.data = self.get_dataset_from_path()
 
 
     def __len__(self):
@@ -58,9 +63,11 @@ class LMODataset(data.Dataset):
 
 
     def get_dataset_from_path(self):
+
         data = []
         model_root = self.base_dir + 'models'
         frame_root = self.base_dir + self.mode
+
 
         model_files = list(Path(model_root).glob('*.ply'))
         obj_num = len(model_files)
@@ -70,7 +77,7 @@ class LMODataset(data.Dataset):
 
             model_path = str(model_files[obj_id])
 
-            src_pcd_, _ = sample_point_from_mesh(model_path, samples=30000)
+            src_pcd_, _ = sample_point_from_mesh(model_path, samples=10000)
             src_pcd = src_pcd_ / 1000
 
             model_id = str(obj_id + 1).zfill(6)
@@ -149,7 +156,7 @@ class LMODataset(data.Dataset):
                 if (trans.ndim == 1):
                     trans = trans[:, None]
 
-                corr = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
+                corr, coverage = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
 
                 # shift = trans + 0.1
                 # src_t = transformation_pcd(src_pcd, rot, shift)
@@ -166,10 +173,12 @@ class LMODataset(data.Dataset):
                     'tgt_pcd': tgt_pcd.astype(np.float32),
                     'rot': rot.astype(np.float32),
                     'trans': trans.astype(np.float32),
-                    'corr': corr.astype(np.int32)
+                    'corr': corr.astype(np.int32),
+                    'coverage': coverage
                 }
                 data.append(frame_data)
-
+        with open(self.pickle_file, 'wb') as f:
+            pickle.dump(data, f)
         return data
 
 
