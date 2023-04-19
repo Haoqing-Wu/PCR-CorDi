@@ -1,14 +1,16 @@
-import open3d as o3d
-import numpy as np
-from PIL import Image
-import os.path
-import torch
 import json
+import pickle
+import open3d as o3d
+import random
+import numpy as np
 import numpy.ma as ma
 import torch.utils.data as data
-from scipy.spatial.transform import Rotation
-import pickle
+from PIL import Image
 from tqdm import tqdm
+from pathlib import Path
+from scipy.spatial.transform import Rotation
+
+
 from dataset.bop_utils import *
 
 class LMODataset(data.Dataset):
@@ -46,6 +48,7 @@ class LMODataset(data.Dataset):
         self.view_point = np.array([0., 0., 0.])  
         # radius used to find the nearest neighbors
         self.corr_radius = 0.001
+        self.gt_vis = args.gt_vis
         # loaded data
         self.pickle_file = self.base_dir + 'cache/lm.pkl'
         if args.data_from_pkl:
@@ -97,6 +100,7 @@ class LMODataset(data.Dataset):
             mask_files = list(Path(mask_path).glob('*.png'))
             frame_num = len(depth_files)
             
+            rand_frame =random.randint(1, frame_num)
             for frame_id in tqdm(range(frame_num)):
                 cam_cx, cam_cy, cam_fx, cam_fy = get_camera_info(cam_path, frame_id)
                 rot, trans = get_gt(gt_path, frame_id) 
@@ -158,13 +162,8 @@ class LMODataset(data.Dataset):
 
                 corr, coverage = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
 
-                # shift = trans + 0.1
-                # src_t = transformation_pcd(src_pcd, rot, shift)
-                # pcd_model = o3d.geometry.PointCloud()
-                # pcd_model.points = o3d.utility.Vector3dVector(src_t)
-                # pcd_frame = o3d.geometry.PointCloud()
-                # pcd_frame.points = o3d.utility.Vector3dVector(tgt_pcd)
-                # o3d.visualization.draw_geometries([pcd_model, pcd_frame])
+                if self.gt_vis and frame_id == rand_frame:
+                    gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr)
 
                 frame_data = {
                     'obj_id': obj_id,
@@ -180,6 +179,30 @@ class LMODataset(data.Dataset):
         with open(self.pickle_file, 'wb') as f:
             pickle.dump(data, f)
         return data
+
+def gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr):
+    shift = trans + 0.1
+    src_t = transformation_pcd(src_pcd, rot, shift)
+    pcd_model = o3d.geometry.PointCloud()
+    pcd_model.points = o3d.utility.Vector3dVector(src_t)
+    pcd_frame = o3d.geometry.PointCloud()
+    pcd_frame.points = o3d.utility.Vector3dVector(tgt_pcd)
+
+    points = []
+    lines = []
+    for i in range(corr.shape[0]):
+        src_point = src_t[corr[i, 1]]
+        tgt_point = tgt_pcd[corr[i, 0]]
+        points.append(src_point)
+        points.append(tgt_point)
+        lines.append([i * 2, i * 2 + 1])
+
+    line = o3d.geometry.LineSet()
+    line.points = o3d.utility.Vector3dVector(points)
+    line.lines = o3d.utility.Vector2iVector(lines)
+    line.colors = o3d.utility.Vector3dVector([[0, 1, 0] for i in range(len(lines))])
+    o3d.visualization.draw_geometries([pcd_model, pcd_frame, line])
+
 
 
 def debug_data():

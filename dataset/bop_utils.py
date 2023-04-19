@@ -1,14 +1,9 @@
 import json
-import os
+import cv2
 import open3d as o3d
 import numpy as np
-from pathlib import Path
-from PIL import Image
-import numpy.ma as ma
-import cv2
 from scipy.spatial import cKDTree
 
-from collections import defaultdict
 
 
 def sample_point_from_mesh(model_root,samples):
@@ -119,9 +114,3 @@ def get_corr(tgt_pcd, src_pcd, rot, trans, radius):
     covage = corr.shape[0] / tgt_pcd.shape[0]
     return corr, covage
 
-# test of method get_dataset_from_path
-if __name__ == "__main__":
-    base_dir = './data/linemod/'
-    mode = 'train'
-    data = get_dataset_from_path(base_dir, mode)
-    print(data)
