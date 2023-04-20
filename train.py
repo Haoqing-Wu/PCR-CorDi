@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument('--augment_noise', type=float, default=0.0001)
     parser.add_argument('--rotated', type=bool, default=False)
     parser.add_argument('--rot_factor', type=float, default=1.)
-    parser.add_argument('--points_limit', type=int, default=10000)
+    parser.add_argument('--points_limit', type=int, default=1000)
 
     args = parser.parse_args()
     

@@ -80,7 +80,7 @@ class LMODataset(data.Dataset):
 
             model_path = str(model_files[obj_id])
 
-            src_pcd_, _ = sample_point_from_mesh(model_path, samples=10000)
+            src_pcd_, _ = sample_point_from_mesh(model_path, samples=1000)
             src_pcd = src_pcd_ / 1000
 
             model_id = str(obj_id + 1).zfill(6)
