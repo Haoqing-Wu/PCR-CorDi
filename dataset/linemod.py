@@ -31,7 +31,7 @@ class LMODataset(data.Dataset):
         # arguments
         self.args = args
         # root dir
-        self.base_dir = args.data_folder + '/linemod/'
+        self.base_dir = args.data_folder + 'linemod/'
         # whether to do data augmentation
         self.data_augmentation = args.data_augmentation
         # original benchmark or rotated benchmark
@@ -45,9 +45,10 @@ class LMODataset(data.Dataset):
         # can be in ['train', 'test']
         self.mode = mode
         # view point is the (0,0,0) of cad model
-        self.view_point = np.array([0., 0., 0.])  
+        # self.view_point = np.array([0., 0., 0.])  
         # radius used to find the nearest neighbors
         self.corr_radius = 0.001
+        # whether to visualize the ground truth
         self.gt_vis = args.gt_vis
         # loaded data
         self.pickle_file = self.base_dir + 'cache/lm.pkl'
@@ -73,14 +74,14 @@ class LMODataset(data.Dataset):
 
 
         model_files = list(Path(model_root).glob('*.ply'))
-        obj_num = len(model_files)
-        
+        #obj_num = len(model_files)
+        obj_num = 1
         for obj_id in tqdm(range(obj_num)):
             
 
             model_path = str(model_files[obj_id])
 
-            src_pcd_, _ = sample_point_from_mesh(model_path, samples=1000)
+            src_pcd_, _ = sample_point_from_mesh(model_path, samples=10000)
             src_pcd = src_pcd_ / 1000
 
             model_id = str(obj_id + 1).zfill(6)
@@ -161,6 +162,7 @@ class LMODataset(data.Dataset):
                     trans = trans[:, None]
 
                 corr, coverage = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
+                corr_matrix = get_corr_matrix(corr, tgt_pcd.shape[0], src_pcd.shape[0])
 
                 if self.gt_vis and frame_id == rand_frame:
                     gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr)
@@ -172,7 +174,7 @@ class LMODataset(data.Dataset):
                     'tgt_pcd': tgt_pcd.astype(np.float32),
                     'rot': rot.astype(np.float32),
                     'trans': trans.astype(np.float32),
-                    'corr': corr.astype(np.int32),
+                    'corr_matrix': corr_matrix.astype(np.float32),
                     'coverage': coverage
                 }
                 data.append(frame_data)
@@ -180,28 +182,7 @@ class LMODataset(data.Dataset):
             pickle.dump(data, f)
         return data
 
-def gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr):
-    shift = trans + 0.1
-    src_t = transformation_pcd(src_pcd, rot, shift)
-    pcd_model = o3d.geometry.PointCloud()
-    pcd_model.points = o3d.utility.Vector3dVector(src_t)
-    pcd_frame = o3d.geometry.PointCloud()
-    pcd_frame.points = o3d.utility.Vector3dVector(tgt_pcd)
 
-    points = []
-    lines = []
-    for i in range(corr.shape[0]):
-        src_point = src_t[corr[i, 1]]
-        tgt_point = tgt_pcd[corr[i, 0]]
-        points.append(src_point)
-        points.append(tgt_point)
-        lines.append([i * 2, i * 2 + 1])
-
-    line = o3d.geometry.LineSet()
-    line.points = o3d.utility.Vector3dVector(points)
-    line.lines = o3d.utility.Vector2iVector(lines)
-    line.colors = o3d.utility.Vector3dVector([[0, 1, 0] for i in range(len(lines))])
-    o3d.visualization.draw_geometries([pcd_model, pcd_frame, line])
 
 
 

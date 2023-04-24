@@ -15,7 +15,6 @@ def sample_point_from_mesh(model_root,samples):
     pcd.scale(scale_factor,(0, 0, 0))
     points = np.asarray(pcd.points)
     normals = np.asarray(pcd.normals)
-    # o3d.visualization.draw_geometries([pcd], point_show_normal=True)
     return points, normals
 
 def get_bbox(bbox):
@@ -114,3 +113,56 @@ def get_corr(tgt_pcd, src_pcd, rot, trans, radius):
     covage = corr.shape[0] / tgt_pcd.shape[0]
     return corr, covage
 
+def get_corr_matrix(corr, tgt_len, src_len):
+    r"""Get a correspondence matrix from a correspondence array.
+    Return correspondence matrix [tgt_len, src_len]
+    """
+    corr_matrix = np.full((tgt_len, src_len), -1.0, dtype=np.float32)
+    corr_matrix[corr[:, 0], corr[:, 1]] = 1.0
+    return corr_matrix
+
+def gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr):
+    r"""Visualise the ground truth correspondences between two point clouds.
+    shift the transformed source point cloud to avoid overlapping
+    """
+    shift_t = trans + 0.1
+    src_t = transformation_pcd(src_pcd, rot, shift_t)
+    pcd_model = o3d.geometry.PointCloud()
+    pcd_model.points = o3d.utility.Vector3dVector(src_pcd)
+    pcd_model_t = o3d.geometry.PointCloud()
+    pcd_model_t.points = o3d.utility.Vector3dVector(src_t)
+    pcd_frame = o3d.geometry.PointCloud()
+    pcd_frame.points = o3d.utility.Vector3dVector(tgt_pcd)
+
+    
+
+    # draw the correspondences between the transformed source and target
+    points = []
+    lines = []
+    for i in range(corr.shape[0]):
+        src_t_point = src_t[corr[i, 1]]
+        tgt_point = tgt_pcd[corr[i, 0]]
+        points.append(src_t_point)
+        points.append(tgt_point)
+        lines.append([i * 2, i * 2 + 1])
+
+    line_gt = o3d.geometry.LineSet()
+    line_gt.points = o3d.utility.Vector3dVector(points)
+    line_gt.lines = o3d.utility.Vector2iVector(lines)
+    line_gt.colors = o3d.utility.Vector3dVector([[0, 1, 0] for i in range(len(lines))])
+
+    # draw the correspondences between the original source and target
+    points = []
+    lines = []
+    for i in range(corr.shape[0]):
+        src_point = src_pcd[corr[i, 1]]
+        tgt_point = tgt_pcd[corr[i, 0]]
+        points.append(src_point)
+        points.append(tgt_point)
+        lines.append([i * 2, i * 2 + 1])
+
+    line = o3d.geometry.LineSet()
+    line.points = o3d.utility.Vector3dVector(points)
+    line.lines = o3d.utility.Vector2iVector(lines)
+    line.colors = o3d.utility.Vector3dVector([[0, 0.8, 0.2] for i in range(len(lines))])
+    o3d.visualization.draw_geometries([pcd_model, pcd_model_t, pcd_frame, line, line_gt])
