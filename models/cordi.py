@@ -39,3 +39,7 @@ class Cordi(Module):
         loss = self.diffusion.get_loss(corr, z_src, z_tgt)
 
         return loss
+    
+    def sample(self, context_a, context_b, num_points, flexibility):
+        samples = self.diffusion.sample(num_points, context_a=context_a, context_b=context_b, flexibility=flexibility)
+        return samples
