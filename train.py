@@ -1,6 +1,7 @@
 import os
 import argparse
 import torch
+import wandb
 from torch.utils.data import DataLoader
 from dataset.linemod import LMODataset
 from utils.common import *
@@ -14,7 +15,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training with CorDi')
     # Dataset
     parser.add_argument("--workers", type=int, default=0)
-    parser.add_argument('--batch_size', type=int, default=4)
+    parser.add_argument('--train_batch_size', type=int, default=2)
+    parser.add_argument('--val_batch_size', type=int, default=2)
     parser.add_argument('--data_folder', type=str, default='./data/')
     parser.add_argument('--dataset', type=str, default='lm')
     parser.add_argument('--data_from_pkl', type=bool, default=False)
@@ -23,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--augment_noise', type=float, default=0.0001)
     parser.add_argument('--rotated', type=bool, default=False)
     parser.add_argument('--rot_factor', type=float, default=1.)
-    parser.add_argument('--points_limit', type=int, default=1000)
+    parser.add_argument('--points_limit', type=int, default=300)
     # Model
     parser.add_argument('--latent_dim', type=int, default=256)
     parser.add_argument('--num_steps', type=int, default=100)
@@ -44,13 +46,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # set logger
+    wandb.init(project='cordi', config=args)
 
     # set dataset
     train_data = LMODataset(args, mode='train')
+    test_data = LMODataset(args, mode='test')
     train_iter = get_iterator(DataLoader(train_data,
-                                         batch_size=args.batch_size, 
+                                         batch_size=args.train_batch_size, 
                                          shuffle=True, 
-                                         num_workers=args.workers))
+                                         num_workers=args.workers,
+                                         drop_last=True))
+    test_iter = get_iterator(DataLoader(test_data,
+                                        batch_size=args.val_batch_size,
+                                        shuffle=False,
+                                        num_workers=args.workers,
+                                        drop_last=True))
     # set model
     model = Cordi(args).to(args.device)
     # set optimizer

@@ -110,8 +110,8 @@ def get_corr(tgt_pcd, src_pcd, rot, trans, radius):
         [(i, j) for i, indices in enumerate(indices_list) for j in indices],
         dtype=np.int32,
     )
-    covage = corr.shape[0] / tgt_pcd.shape[0]
-    return corr, covage
+    coverage = corr.shape[0] / tgt_pcd.shape[0]
+    return corr, coverage
 
 def get_corr_matrix(corr, tgt_len, src_len):
     r"""Get a correspondence matrix from a correspondence array.
@@ -120,6 +120,13 @@ def get_corr_matrix(corr, tgt_len, src_len):
     corr_matrix = np.full((tgt_len, src_len), -1.0, dtype=np.float32)
     corr_matrix[corr[:, 0], corr[:, 1]] = 1.0
     return corr_matrix
+
+def get_corr_src_pcd(corr, src_pcd):
+    r"""Get the source point cloud of the correspondences.
+    Return source point cloud of the correspondences
+    """
+    return src_pcd[corr[:, 1]]
+
 
 def gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr):
     r"""Visualise the ground truth correspondences between two point clouds.

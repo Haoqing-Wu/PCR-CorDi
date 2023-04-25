@@ -164,6 +164,8 @@ class LMODataset(data.Dataset):
                 corr, coverage = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
                 corr_matrix = get_corr_matrix(corr, tgt_pcd.shape[0], src_pcd.shape[0])
 
+                
+
                 if self.gt_vis and frame_id == rand_frame:
                     gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr)
 

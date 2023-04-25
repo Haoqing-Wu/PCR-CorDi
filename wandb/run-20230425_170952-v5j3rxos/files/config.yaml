@@ -1,0 +1,96 @@
+wandb_version: 1
+
+workers:
+  desc: null
+  value: 0
+batch_size:
+  desc: null
+  value: 2
+data_folder:
+  desc: null
+  value: ./data/
+dataset:
+  desc: null
+  value: lm
+data_from_pkl:
+  desc: null
+  value: false
+gt_vis:
+  desc: null
+  value: false
+data_augmentation:
+  desc: null
+  value: true
+augment_noise:
+  desc: null
+  value: 0.0001
+rotated:
+  desc: null
+  value: false
+rot_factor:
+  desc: null
+  value: 1.0
+points_limit:
+  desc: null
+  value: 300
+latent_dim:
+  desc: null
+  value: 256
+num_steps:
+  desc: null
+  value: 100
+beta_1:
+  desc: null
+  value: 0.0001
+beta_T:
+  desc: null
+  value: 0.02
+sched_mode:
+  desc: null
+  value: linear
+residual:
+  desc: null
+  value: true
+lr:
+  desc: null
+  value: 0.001
+weight_decay:
+  desc: null
+  value: 0.0001
+epoch:
+  desc: null
+  value: 100
+save_freq:
+  desc: null
+  value: 10
+device:
+  desc: null
+  value: cuda
+max_iters:
+  desc: null
+  value: 2000
+_wandb:
+  desc: null
+  value:
+    python_version: 3.10.10
+    cli_version: 0.15.0
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: true
+    start_time: 1682435392.101085
+    t:
+      1:
+      - 1
+      - 55
+      2:
+      - 1
+      - 55
+      3:
+      - 16
+      - 23
+      4: 3.10.10
+      5: 0.15.0
+      8:
+      - 2
+      - 3
+      - 5

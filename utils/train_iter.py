@@ -1,3 +1,4 @@
+import wandb
 
 def train(args, model, optimizer, scheduler, data_iter, logger=None):
 
@@ -15,14 +16,21 @@ def train(args, model, optimizer, scheduler, data_iter, logger=None):
             model.train()
             # forward
             loss = model.get_loss(corr, src, tgt)
+            
             # backward
             loss.backward()
             # update
             optimizer.step()
             # log
+            print("Epoch: {}, Iter: {}, Loss: {}".format(i, iter_idx, loss.item()))
+            wandb.log({'loss': loss.item()})
             pass
         scheduler.step()
         # save model
         # log
         pass
+    pass
+
+def validate(args, model, data_iter, logger=None):
+    
     pass

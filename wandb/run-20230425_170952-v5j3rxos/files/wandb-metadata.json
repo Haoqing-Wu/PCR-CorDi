@@ -1,0 +1,50 @@
+{
+    "os": "Windows-10-10.0.19044-SP0",
+    "python": "3.10.10",
+    "heartbeatAt": "2023-04-25T15:09:53.276280",
+    "startedAt": "2023-04-25T15:09:52.083109",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "D:\\DL\\PCR-CorDi\\train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/Haoqing-Wu/PCR-CorDi.git",
+        "commit": "b32d5ea271d9ae94d0c78dd7385bf770397913cb"
+    },
+    "email": "haoqing.wu@outlook.com",
+    "root": "D:/DL/PCR-CorDi",
+    "host": "BINO2488",
+    "username": "TF77WWL",
+    "executable": "C:\\Users\\TF77WWL\\.conda\\envs\\cordi\\python.exe",
+    "cpu_count": 6,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 2592.0,
+        "min": 0.0,
+        "max": 2592.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2592.0,
+            "min": 0.0,
+            "max": 2592.0
+        }
+    ],
+    "disk": {
+        "total": 460.79394149780273,
+        "used": 127.05501174926758
+    },
+    "gpu": "Quadro T2000",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "Quadro T2000",
+            "memory_total": 4294967296
+        }
+    ],
+    "memory": {
+        "total": 31.82711410522461
+    }
+}

@@ -55,12 +55,12 @@ class PointwiseNet(Module):
         self.act = F.leaky_relu
         self.residual = residual
         self.layers = ModuleList([
-            ConcatSquashLinear(2, 128, context_dim+3),
+            ConcatSquashLinear(1, 128, context_dim+3),
             ConcatSquashLinear(128, 256, context_dim+3),
             ConcatSquashLinear(256, 512, context_dim+3),
             ConcatSquashLinear(512, 256, context_dim+3),
             ConcatSquashLinear(256, 128, context_dim+3),
-            ConcatSquashLinear(128, 2, context_dim+3)
+            ConcatSquashLinear(128, 1, context_dim+3)
         ])
 
     def forward(self, x, beta, context_a, context_b):
@@ -78,12 +78,14 @@ class PointwiseNet(Module):
         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
         ctx_emb = torch.cat([time_emb, context_a, context_b], dim=-1)    # (B, 1, F+6)
 
-        out = x
+        
+        out = x.flatten(start_dim=1)    # (B, N*d)
+        out = out.unsqueeze(-1)         # (B, N*d, 1)
         for i, layer in enumerate(self.layers):
             out = layer(ctx=ctx_emb, x=out)
             if i < len(self.layers) - 1:
                 out = self.act(out)
-
+        out = out.view(batch_size, 300, 300)
         if self.residual:
             return x + out
         else:
@@ -132,9 +134,9 @@ class DiffusionPoint(Module):
         loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
 
-    def sample(self, num_points, context, point_dim=3, flexibility=0.0, ret_traj=False):
-        batch_size = context.size(0)
-        x_T = torch.randn([batch_size, num_points, point_dim]).to(context.device)
+    def sample(self, num_points, context_a, context_b, point_dim=3, flexibility=0.0, ret_traj=False):
+        batch_size = context_a.size(0)
+        x_T = torch.randn([batch_size, num_points, point_dim]).to(context_a.device)
         traj = {self.var_sched.num_steps: x_T}
         for t in range(self.var_sched.num_steps, 0, -1):
             z = torch.randn_like(x_T) if t > 1 else torch.zeros_like(x_T)
@@ -147,7 +149,7 @@ class DiffusionPoint(Module):
 
             x_t = traj[t]
             beta = self.var_sched.betas[[t]*batch_size]
-            e_theta = self.net(x_t, beta=beta, context=context)
+            e_theta = self.net(x_t, beta=beta, context=context_a, context_b=context_b)
             x_next = c0 * (x_t - c1 * e_theta) + sigma * z
             traj[t-1] = x_next.detach()     # Stop gradient and save trajectory.
             traj[t] = traj[t].cpu()         # Move previous output to CPU memory.
