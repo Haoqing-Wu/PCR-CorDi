@@ -1,3 +1,4 @@
+import os
 import json
 import pickle
 import open3d as o3d
@@ -97,17 +98,20 @@ class LMODataset(data.Dataset):
             ymap = np.array([[i for i in range(640)] for j in range(480)])
 
 
-            depth_files = list(Path(depth_path).glob('*.png'))
-            mask_files = list(Path(mask_path).glob('*.png'))
+            depth_files = {os.path.splitext(os.path.basename(file))[0]:\
+                            str(file) for file in Path(depth_path).glob('*.png')}
+            mask_files = {os.path.splitext(os.path.basename(file))[0]:\
+                            str(file) for file in Path(mask_path).glob('*.png')}
+            frames = list(depth_files.keys())
             frame_num = len(depth_files)
             
-            rand_frame =random.randint(1, frame_num)
-            for frame_id in tqdm(range(frame_num)):
-                cam_cx, cam_cy, cam_fx, cam_fy = get_camera_info(cam_path, frame_id)
-                rot, trans = get_gt(gt_path, frame_id) 
+            rand_frame =random.choice(frames)
+            for frame_id in frames:
+                cam_cx, cam_cy, cam_fx, cam_fy = get_camera_info(cam_path, int(frame_id))
+                rot, trans = get_gt(gt_path, int(frame_id)) 
 
                 depth = np.array(Image.open(str(depth_files[frame_id])))
-                vis_mask = np.array(Image.open(str(mask_files[frame_id])))
+                vis_mask = np.array(Image.open(str(mask_files[frame_id + '_000000'])))
                 mask_depth = ma.getmaskarray(ma.masked_not_equal(depth, 0))
                 mask_label = ma.getmaskarray(ma.masked_equal(vis_mask, np.array(255)))
                 mask = mask_label * mask_depth	
