@@ -1,8 +1,10 @@
 import json
 import cv2
+import torch
 import open3d as o3d
 import numpy as np
 from scipy.spatial import cKDTree
+from focal_loss.focal_loss import FocalLoss
 
 
 
@@ -126,6 +128,44 @@ def get_corr_src_pcd(corr, src_pcd):
     Return source point cloud of the correspondences
     """
     return src_pcd[corr[:, 1]]
+
+def get_corr_similarity(corr_matrix, gt_corr_matrix):
+    r"""Get the cosine distance similarity between the correspondence matrix 
+    and the ground truth correspondence matrix.
+    Return cosine distance similarity
+    """
+    corr_matrix = corr_matrix.astype(np.float32)
+    gt_corr_matrix = gt_corr_matrix.astype(np.float32)
+    num = np.dot(corr_matrix, gt_corr_matrix.T)  
+    denom = np.linalg.norm(corr_matrix, axis=1).reshape(-1, 1) * np.linalg.norm(gt_corr_matrix, axis=1) 
+    res = num / denom
+    res[np.isneginf(res)] = 0
+    return 0.5 + 0.5 * res
+
+def focal_loss(y_true, y_pred, gamma=2):
+    """
+    Focal loss function for binary classification
+    """
+    criterion = FocalLoss(gamma)
+    y_pred = torch.from_numpy(y_pred.flatten())
+    y_pred = torch.nn.Sigmoid()(y_pred)
+    y_true = (y_true + 1) / 2
+    y_true = torch.from_numpy(y_true.flatten().astype(np.int64))
+    focal_loss = criterion(y_pred, y_true)
+    return focal_loss.numpy()
+
+def get_corr_from_matrix_topk(corr_matrix, k):
+    r"""Get the top k correspondences from a correspondence matrix.
+    Return correspondence indices [indices in ref_points, indices in src_points]
+    """
+    corr_indices = corr_matrix.view(-1).topk(k=k, largest=True)[1]
+    ref_corr_indices = corr_indices // corr_matrix.shape[1]
+    src_corr_indices = corr_indices % corr_matrix.shape[1]
+    corr = np.array(
+        [(i, j) for i, j in zip(ref_corr_indices, src_corr_indices)],
+        dtype=np.int32,
+    )
+    return corr
 
 
 def gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr):

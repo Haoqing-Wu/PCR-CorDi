@@ -130,3 +130,6 @@ dmypy.json
 
 # dataset directory
 /data
+
+# logging directory
+/wandb

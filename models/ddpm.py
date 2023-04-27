@@ -55,12 +55,12 @@ class PointwiseNet(Module):
         self.act = F.leaky_relu
         self.residual = residual
         self.layers = ModuleList([
-            ConcatSquashLinear(1, 128, context_dim+3),
-            ConcatSquashLinear(128, 256, context_dim+3),
-            ConcatSquashLinear(256, 512, context_dim+3),
-            ConcatSquashLinear(512, 256, context_dim+3),
-            ConcatSquashLinear(256, 128, context_dim+3),
-            ConcatSquashLinear(128, 1, context_dim+3)
+            ConcatSquashLinear(1, 32, context_dim+3),
+            ConcatSquashLinear(32, 64, context_dim+3),
+            ConcatSquashLinear(64, 128, context_dim+3),
+            ConcatSquashLinear(128, 64, context_dim+3),
+            ConcatSquashLinear(64, 32, context_dim+3),
+            ConcatSquashLinear(32, 1, context_dim+3)
         ])
 
     def forward(self, x, beta, context_a, context_b):
@@ -85,7 +85,7 @@ class PointwiseNet(Module):
             out = layer(ctx=ctx_emb, x=out)
             if i < len(self.layers) - 1:
                 out = self.act(out)
-        out = out.view(batch_size, 300, 300)
+        out = out.view(batch_size, x.size(1), x.size(2))
         if self.residual:
             return x + out
         else:
@@ -134,7 +134,7 @@ class DiffusionPoint(Module):
         loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
 
-    def sample(self, x_T, context_a, context_b, point_dim=3, flexibility=0.0, ret_traj=False):
+    def sample(self, x_T, context_a, context_b, flexibility=0.0, ret_traj=False):
         batch_size = context_a.size(0)
         traj = {self.var_sched.num_steps: x_T}
         for t in range(self.var_sched.num_steps, 0, -1):
