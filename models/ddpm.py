@@ -134,9 +134,8 @@ class DiffusionPoint(Module):
         loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
 
-    def sample(self, num_points, context_a, context_b, point_dim=3, flexibility=0.0, ret_traj=False):
+    def sample(self, x_T, context_a, context_b, point_dim=3, flexibility=0.0, ret_traj=False):
         batch_size = context_a.size(0)
-        x_T = torch.randn([batch_size, num_points, point_dim]).to(context_a.device)
         traj = {self.var_sched.num_steps: x_T}
         for t in range(self.var_sched.num_steps, 0, -1):
             z = torch.randn_like(x_T) if t > 1 else torch.zeros_like(x_T)
@@ -149,7 +148,7 @@ class DiffusionPoint(Module):
 
             x_t = traj[t]
             beta = self.var_sched.betas[[t]*batch_size]
-            e_theta = self.net(x_t, beta=beta, context=context_a, context_b=context_b)
+            e_theta = self.net(x_t, beta=beta, context_a=context_a, context_b=context_b)
             x_next = c0 * (x_t - c1 * e_theta) + sigma * z
             traj[t-1] = x_next.detach()     # Stop gradient and save trajectory.
             traj[t] = traj[t].cpu()         # Move previous output to CPU memory.

@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_folder', type=str, default='./data/')
     parser.add_argument('--dataset', type=str, default='lm')
     parser.add_argument('--data_from_pkl', type=bool, default=False)
-    parser.add_argument('--gt_vis', type=bool, default=True)
+    parser.add_argument('--gt_vis', type=bool, default=False)
     parser.add_argument('--data_augmentation', type=bool, default=True)
     parser.add_argument('--augment_noise', type=float, default=0.0001)
     parser.add_argument('--rotated', type=bool, default=False)
@@ -33,6 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('--beta_T', type=float, default=0.02)
     parser.add_argument('--sched_mode', type=str, default='linear')
     parser.add_argument('--residual', type=eval, default=True, choices=[True, False])
+    parser.add_argument('--flexibility', type=float, default=0.0)
     # Optimizer and scheduler
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--max_train_iters', type=int, default=2000)
     parser.add_argument('--max_val_iters', type=int, default=500)
-    parser.add_argument('--val_freq', type=int, default=1000)
+    parser.add_argument('--val_freq', type=int, default=2)
 
 
     args = parser.parse_args()

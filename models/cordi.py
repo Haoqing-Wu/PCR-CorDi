@@ -40,6 +40,10 @@ class Cordi(Module):
 
         return loss
     
-    def sample(self, context_a, context_b, num_points, flexibility):
-        samples = self.diffusion.sample(num_points, context_a=context_a, context_b=context_b, flexibility=flexibility)
+    def sample(self, x_T, src, tgt, flexibility):
+        z_src_mu, z_src_sigma = self.encoder_src(src)
+        z_src = reparameterize_gaussian(mean=z_src_mu, logvar=z_src_sigma)  # (B, F)
+        z_tgt_mu, z_tgt_sigma = self.encoder_tgt(tgt)
+        z_tgt = reparameterize_gaussian(mean=z_tgt_mu, logvar=z_tgt_sigma)  # (B, F)
+        samples = self.diffusion.sample(x_T, z_src, z_tgt, flexibility=flexibility)
         return samples

@@ -1,4 +1,5 @@
 import wandb
+import torch
 
 def train(args, model, optimizer, scheduler, train_iter, val_iter, logger=None):
 
@@ -36,4 +37,10 @@ def train(args, model, optimizer, scheduler, train_iter, val_iter, logger=None):
 def validate(args, model, val_iter, logger=None):
     for iter_idx in range(args.max_val_iters):
         batch = next(val_iter)
+        corr = batch['corr_matrix'].to(args.device)
+        src = batch['src_pcd'].to(args.device)
+        tgt = batch['tgt_pcd'].to(args.device)
+        corr_T = torch.randn([args.val_batch_size, tgt.shape[1], src.shape[1]]).to(args.device)
+        with torch.no_grad():
+            sample = model.sample(corr_T, src, tgt, args.flexibility)
     pass
