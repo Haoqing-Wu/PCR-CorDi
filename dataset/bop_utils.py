@@ -213,3 +213,58 @@ def gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr):
     line.lines = o3d.utility.Vector2iVector(lines)
     line.colors = o3d.utility.Vector3dVector([[0, 0.8, 0.2] for i in range(len(lines))])
     o3d.visualization.draw_geometries([pcd_model, pcd_model_t, pcd_frame, line, line_gt])
+
+def corr_visualisation(src_pcd, tgt_pcd, corr_mat_pred, corr_mat_gt, rot_gt, trans_gt, shift=0.1):
+    # src point cloud
+    pcd_model = o3d.geometry.PointCloud()
+    pcd_model.points = o3d.utility.Vector3dVector(src_pcd)
+    # transformed src point cloud from the ground truth
+    shift_t = trans_gt + shift
+    src_pcd_t = transformation_pcd(src_pcd, rot_gt, shift_t)
+    pcd_model_t = o3d.geometry.PointCloud()
+    pcd_model_t.points = o3d.utility.Vector3dVector(src_pcd_t)
+    # target point cloud
+    pcd_frame = o3d.geometry.PointCloud()
+    pcd_frame.points = o3d.utility.Vector3dVector(tgt_pcd)
+
+    inlier_points = []
+    outlier_points = []
+    inlier_lines = []
+    outlier_lines = []
+    # find inliers pairs from two correspondence matrices
+    for i in range(corr_mat_pred.shape[0]):
+        for j in range(corr_mat_pred.shape[1]):
+            if corr_mat_pred[i, j] == 1.0 and corr_mat_gt[i, j] == 1.0:
+                inlier_points.append(src_pcd_t[j])
+                inlier_points.append(tgt_pcd[i])
+                inlier_lines.append([i * 2, i * 2 + 1])
+            elif (corr_mat_pred[i, j] == 1.0 and corr_mat_gt[i, j] == -1.0) or\
+                  (corr_mat_pred[i, j] == -1.0 and corr_mat_gt[i, j] == 1.0):
+                outlier_points.append(src_pcd_t[j])
+                outlier_points.append(tgt_pcd[i])
+                outlier_lines.append([i * 2, i * 2 + 1])
+    
+    # draw the inlier correspondences
+    line_inlier = o3d.geometry.LineSet()
+    line_inlier.points = o3d.utility.Vector3dVector(inlier_points)
+    line_inlier.lines = o3d.utility.Vector2iVector(inlier_lines)
+    line_inlier.colors = o3d.utility.Vector3dVector([[0, 1, 0] for i in range(len(inlier_lines))])
+
+    # draw the outlier correspondences
+    line_outlier = o3d.geometry.LineSet()
+    line_outlier.points = o3d.utility.Vector3dVector(outlier_points)
+    line_outlier.lines = o3d.utility.Vector2iVector(outlier_lines)
+    line_outlier.colors = o3d.utility.Vector3dVector([[1, 0, 0] for i in range(len(outlier_lines))])
+
+    # draw point clouds and correspondences
+    #o3d.visualization.draw_geometries([pcd_model_t, pcd_frame, line_inlier, line_outlier])
+    # save all visualisation
+    o3d.io.write_point_cloud("pcd_model_t.ply", pcd_model_t)
+    o3d.io.write_point_cloud("pcd_frame.ply", pcd_frame)
+    o3d.io.write_line_set("line_inlier.ply", line_inlier)
+    o3d.io.write_line_set("line_outlier.ply", line_outlier)
+    
+
+
+    
+
