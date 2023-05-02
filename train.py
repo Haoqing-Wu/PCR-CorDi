@@ -38,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--weight_decay', type=float, default=0.0)
     # Training
-    parser.add_argument('--logging', type=bool, default=False)
+    parser.add_argument('--logging', type=bool, default=True)
     parser.add_argument('--epoch', type=int, default=200)
     #parser.add_argument('--save_freq', type=int, default=10)
     parser.add_argument('--device', type=str, default='cuda')

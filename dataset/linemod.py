@@ -48,7 +48,7 @@ class LMODataset(data.Dataset):
         # view point is the (0,0,0) of cad model
         # self.view_point = np.array([0., 0., 0.])  
         # radius used to find the nearest neighbors
-        self.corr_radius = 0.005
+        self.corr_radius = 0.01
         # whether to visualize the ground truth
         self.gt_vis = args.gt_vis
         # loaded data

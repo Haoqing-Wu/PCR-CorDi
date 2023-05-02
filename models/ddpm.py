@@ -3,6 +3,8 @@ import torch.nn.functional as F
 from torch.nn import Module, Parameter, ModuleList, Linear
 import numpy as np
 
+from utils.common import *
+
 
 
 class VarianceSchedule(Module):
@@ -130,8 +132,9 @@ class DiffusionPoint(Module):
 
         e_rand = torch.randn_like(x_0)  # (B, N, d)
         e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context_a=context_a, context_b=context_b)
-
-        loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
+        weight = get_weight_tensor_from_corr(x_0, 100, 1).view(-1, point_dim)
+        loss = weighted_mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), weight)
+        #loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
 
     def sample(self, x_T, context_a, context_b, flexibility=0.0, ret_traj=False):
