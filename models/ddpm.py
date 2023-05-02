@@ -55,12 +55,12 @@ class PointwiseNet(Module):
         self.act = F.leaky_relu
         self.residual = residual
         self.layers = ModuleList([
-            ConcatSquashLinear(1, 32, context_dim+3),
-            ConcatSquashLinear(32, 64, context_dim+3),
-            ConcatSquashLinear(64, 128, context_dim+3),
-            ConcatSquashLinear(128, 64, context_dim+3),
-            ConcatSquashLinear(64, 32, context_dim+3),
-            ConcatSquashLinear(32, 1, context_dim+3)
+            ConcatSquashLinear(3, 128, context_dim+3),
+            ConcatSquashLinear(128, 256, context_dim+3),
+            ConcatSquashLinear(256, 512, context_dim+3),
+            ConcatSquashLinear(512, 256, context_dim+3),
+            ConcatSquashLinear(256, 128, context_dim+3),
+            ConcatSquashLinear(128, 3, context_dim+3)
         ])
 
     def forward(self, x, beta, context_a, context_b):
@@ -79,13 +79,12 @@ class PointwiseNet(Module):
         ctx_emb = torch.cat([time_emb, context_a, context_b], dim=-1)    # (B, 1, F+6)
 
         
-        out = x.flatten(start_dim=1)    # (B, N*d)
-        out = out.unsqueeze(-1)         # (B, N*d, 1)
+        out = x
         for i, layer in enumerate(self.layers):
             out = layer(ctx=ctx_emb, x=out)
             if i < len(self.layers) - 1:
                 out = self.act(out)
-        out = out.view(batch_size, x.size(1), x.size(2))
+
         if self.residual:
             return x + out
         else:

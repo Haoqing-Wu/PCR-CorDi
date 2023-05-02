@@ -101,7 +101,7 @@ def transformation_pcd(pcd, rot, trans):
     pcd_t = np.add(pcd_t, trans.T)
     return pcd_t
 
-def get_corr(tgt_pcd, src_pcd, rot, trans, radius):
+def get_corr_r(tgt_pcd, src_pcd, rot, trans, radius):
     r"""Find the ground truth correspondences within the matching radius between two point clouds.
     Return correspondence indices [indices in ref_points, indices in src_points]
     """
@@ -115,6 +115,24 @@ def get_corr(tgt_pcd, src_pcd, rot, trans, radius):
     coverage = corr.shape[0] / tgt_pcd.shape[0]
     return corr, coverage
 
+def get_corr_k(tgt_pcd, src_pcd, transform=False, rot=None, trans=None, k=1):
+    r"""Find the ground truth correspondences within the k nearest neighbors between two point clouds.
+    Return correspondence indices [indices in ref_points, indices in src_points]
+    """
+    if transform:
+        src = transformation_pcd(src_pcd, rot, trans)
+    else:
+        src = src_pcd
+    src_tree = cKDTree(src)
+    _, indices_list = src_tree.query(tgt_pcd, k=k)
+    corr = np.array(
+        [(i, j) for i, j in zip(range(tgt_pcd.shape[0]), indices_list)],
+        dtype=np.int32,
+    )
+    coverage = corr.shape[0] / tgt_pcd.shape[0]
+    return corr, coverage
+
+
 def get_corr_matrix(corr, tgt_len, src_len):
     r"""Get a correspondence matrix from a correspondence array.
     Return correspondence matrix [tgt_len, src_len]
@@ -122,6 +140,15 @@ def get_corr_matrix(corr, tgt_len, src_len):
     corr_matrix = np.full((tgt_len, src_len), -1.0, dtype=np.float32)
     corr_matrix[corr[:, 0], corr[:, 1]] = 1.0
     return corr_matrix
+
+def get_vector_from_corr(corr, tgt_pcd, src_pcd):
+    r"""Get distance vector between src and tgt points from a correspondence array.
+    Return distance vector [tgt_len, 3]
+    """
+    tgt_corr_pcd = tgt_pcd[corr[:, 0]]
+    src_corr_pcd = src_pcd[corr[:, 1]]
+    vector = src_corr_pcd - tgt_corr_pcd
+    return vector
 
 def get_corr_src_pcd(corr, src_pcd):
     r"""Get the source point cloud of the correspondences.
@@ -166,6 +193,15 @@ def get_corr_from_matrix_topk(corr_matrix, k):
         dtype=np.int32,
     )
     return corr
+
+def get_outlier_ratio(pred_corr, gt_corr):
+    r"""Get the outlier ratio between the predicted correspondences and the ground truth correspondences.
+    Return outlier ratio
+    """
+    pred_corr_set = set(map(tuple, pred_corr))
+    gt_corr_set = set(map(tuple, gt_corr))
+    outlier_ratio = len(pred_corr_set - gt_corr_set) / len(pred_corr_set)
+    return outlier_ratio
 
 
 def gt_visualisation(src_pcd, tgt_pcd, trans, rot, corr):
@@ -264,7 +300,23 @@ def corr_visualisation(src_pcd, tgt_pcd, corr_mat_pred, corr_mat_gt, rot_gt, tra
     o3d.io.write_line_set("line_inlier.ply", line_inlier)
     o3d.io.write_line_set("line_outlier.ply", line_outlier)
     
+def gen_visualisation(src_pcd, gen_pcd, tgt_pcd):
+    # src point cloud
+    pcd_model = o3d.geometry.PointCloud()
+    pcd_model.points = o3d.utility.Vector3dVector(src_pcd)
 
+    # generated point cloud
+    pcd_gen = o3d.geometry.PointCloud()
+    pcd_gen.points = o3d.utility.Vector3dVector(gen_pcd)
+
+    # target point cloud
+    pcd_frame = o3d.geometry.PointCloud()
+    pcd_frame.points = o3d.utility.Vector3dVector(tgt_pcd)
+
+    # save the point cloud
+    o3d.io.write_point_cloud("pcd_gen.ply", pcd_gen)
+    o3d.io.write_point_cloud("pcd_frame.ply", pcd_frame)
+    o3d.io.write_point_cloud("pcd_model.ply", pcd_model)
 
     
 

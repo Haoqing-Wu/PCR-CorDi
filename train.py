@@ -15,8 +15,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training with CorDi')
     # Dataset
     parser.add_argument("--workers", type=int, default=0)
-    parser.add_argument('--train_batch_size', type=int, default=8)
-    parser.add_argument('--val_batch_size', type=int, default=2)
+    parser.add_argument('--train_batch_size', type=int, default=128)
+    parser.add_argument('--val_batch_size', type=int, default=32)
     parser.add_argument('--data_folder', type=str, default='./data/')
     parser.add_argument('--dataset', type=str, default='lm')
     parser.add_argument('--data_from_pkl', type=bool, default=False)
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--augment_noise', type=float, default=0.0001)
     parser.add_argument('--rotated', type=bool, default=False)
     parser.add_argument('--rot_factor', type=float, default=1.)
-    parser.add_argument('--points_limit', type=int, default=800)
+    parser.add_argument('--points_limit', type=int, default=100)
     # Model
     parser.add_argument('--latent_dim', type=int, default=256)
     parser.add_argument('--num_steps', type=int, default=100)
@@ -35,16 +35,16 @@ if __name__ == "__main__":
     parser.add_argument('--residual', type=eval, default=True, choices=[True, False])
     parser.add_argument('--flexibility', type=float, default=0.0)
     # Optimizer and scheduler
-    parser.add_argument('--lr', type=float, default=0.001)
+    parser.add_argument('--lr', type=float, default=0.0005)
     parser.add_argument('--weight_decay', type=float, default=0.0)
     # Training
     parser.add_argument('--logging', type=bool, default=True)
     parser.add_argument('--epoch', type=int, default=200)
     parser.add_argument('--save_freq', type=int, default=10)
     parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--max_train_iters', type=int, default=300)
-    parser.add_argument('--max_val_iters', type=int, default=10)
-    parser.add_argument('--start_val_epoch', type=int, default=100)
+    parser.add_argument('--max_train_iters', type=int, default=100)
+    parser.add_argument('--max_val_iters', type=int, default=1)
+    parser.add_argument('--start_val_epoch', type=int, default=10)
     parser.add_argument('--val_freq', type=int, default=10)
 
 

@@ -27,7 +27,7 @@ class Cordi(Module):
                 )
         )
         
-    def get_loss(self, corr, src, tgt,  writer=None, it=None):
+    def get_loss(self, vector, src, tgt,  writer=None, it=None):
         """
         Args:
             x:  Input point clouds, (B, N, d).
@@ -36,7 +36,7 @@ class Cordi(Module):
         z_src = reparameterize_gaussian(mean=z_src_mu, logvar=z_src_sigma)  # (B, F)
         z_tgt_mu, z_tgt_sigma = self.encoder_tgt(tgt)
         z_tgt = reparameterize_gaussian(mean=z_tgt_mu, logvar=z_tgt_sigma)  # (B, F)
-        loss = self.diffusion.get_loss(corr, z_src, z_tgt)
+        loss = self.diffusion.get_loss(vector, z_src, z_tgt)
 
         return loss
     

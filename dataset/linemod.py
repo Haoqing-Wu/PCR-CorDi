@@ -128,7 +128,7 @@ class LMODataset(data.Dataset):
                 cloud = np.concatenate((pt0, pt1, pt2), axis=1)
                 tgt_pcd = cloud / 1000.0
 
-                src_pcd = resize_pcd(src_pcd_, self.points_limit)
+                src_pcd = resize_pcd(src_pcd_, 10000)
                 tgt_pcd = resize_pcd(tgt_pcd, self.points_limit)
 
                 if self.data_augmentation:
@@ -165,8 +165,13 @@ class LMODataset(data.Dataset):
                 if (trans.ndim == 1):
                     trans = trans[:, None]
 
-                corr, coverage = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
-                corr_matrix = get_corr_matrix(corr, tgt_pcd.shape[0], src_pcd.shape[0])
+
+                corr, coverage = get_corr_k(tgt_pcd, src_pcd, transform=True, rot=rot, trans=trans)
+                corr_vector = get_vector_from_corr(corr, tgt_pcd, src_pcd)
+                corr_vector = torch.from_numpy(corr_vector)
+                shift = corr_vector.mean(dim=0).reshape(1, 3).numpy()
+                scale = corr_vector.flatten().std().reshape(1, 1).numpy()
+                corr_vector = ((corr_vector.numpy() - shift) / scale)
 
                 
 
@@ -180,8 +185,10 @@ class LMODataset(data.Dataset):
                     'tgt_pcd': tgt_pcd.astype(np.float32),
                     'rot': rot.astype(np.float32),
                     'trans': trans.astype(np.float32),
-                    'corr_matrix': corr_matrix.astype(np.float32),
-                    'coverage': coverage
+                    'corr_vector': corr_vector.astype(np.float32),
+                    'coverage': coverage,
+                    'shift': shift.astype(np.float32),
+                    'scale': scale.astype(np.float32)
                 }
                 data.append(frame_data)
         with open(self.pickle_file, 'wb') as f:
