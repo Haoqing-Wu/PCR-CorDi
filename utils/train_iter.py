@@ -27,7 +27,8 @@ def train(args, model, optimizer, scheduler, train_iter, val_iter, logger=None):
             # log
             lr = optimizer.param_groups[0]['lr']
             print("[train]Epoch: {}, Iter: {}, Loss: {}, lr: {}".format(epoch, iter_idx, loss.item(), lr))
-            wandb.log({'loss': loss.item()})
+            if args.logging:
+                wandb.log({'loss': loss.item()})
             
         if epoch % args.val_freq == 0 and epoch >= args.start_val_epoch:
             validate(args, model, val_iter, logger)  
@@ -64,6 +65,7 @@ def validate(args, model, val_iter, logger=None):
                 if iter_idx == 0 and i == 0:
                     corr_visualisation(src_pcd, tgt_pcd, pred_corr_matrix, gt_corr, gt_rot, gt_trans)
                 print("[Val]Iter: {0}, p_loss: {1}, c_loss: {2}".format(iter_idx, f_loss, p_loss))
-                wandb.log({'p_loss': p_loss, 'c_loss': f_loss})
+                if args.logging:
+                    wandb.log({'p_loss': p_loss, 'c_loss': f_loss})
 
     pass

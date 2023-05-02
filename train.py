@@ -38,13 +38,13 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--weight_decay', type=float, default=0.0)
     # Training
-    parser.add_argument('--logging', type=bool, default=True)
+    parser.add_argument('--logging', type=bool, default=False)
     parser.add_argument('--epoch', type=int, default=200)
-    parser.add_argument('--save_freq', type=int, default=10)
+    #parser.add_argument('--save_freq', type=int, default=10)
     parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--max_train_iters', type=int, default=300)
-    parser.add_argument('--max_val_iters', type=int, default=10)
-    parser.add_argument('--start_val_epoch', type=int, default=100)
+    parser.add_argument('--max_train_iters', type=int, default=100)
+    parser.add_argument('--max_val_iters', type=int, default=2)
+    parser.add_argument('--start_val_epoch', type=int, default=5)
     parser.add_argument('--val_freq', type=int, default=10)
 
 
