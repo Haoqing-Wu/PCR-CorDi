@@ -227,23 +227,35 @@ def corr_visualisation(src_pcd, tgt_pcd, corr_mat_pred, corr_mat_gt, rot_gt, tra
     pcd_frame = o3d.geometry.PointCloud()
     pcd_frame.points = o3d.utility.Vector3dVector(tgt_pcd)
 
+    pred_points = []
+    pred_lines = []
     inlier_points = []
     outlier_points = []
     inlier_lines = []
     outlier_lines = []
+
     # find inliers pairs from two correspondence matrices
     for i in range(corr_mat_pred.shape[0]):
         for j in range(corr_mat_pred.shape[1]):
+            if corr_mat_pred[i, j] == 1.0:
+                pred_points.append(src_pcd_t[j])
+                pred_points.append(tgt_pcd[i])
+                pred_lines.append([len(pred_points) - 2, len(pred_points) - 1])
             if corr_mat_pred[i, j] == 1.0 and corr_mat_gt[i, j] == 1.0:
                 inlier_points.append(src_pcd_t[j])
                 inlier_points.append(tgt_pcd[i])
-                inlier_lines.append([i * 2, i * 2 + 1])
+                inlier_lines.append([len(inlier_points) - 2, len(inlier_points) - 1])
             elif (corr_mat_pred[i, j] == 1.0 and corr_mat_gt[i, j] == -1.0) or\
                   (corr_mat_pred[i, j] == -1.0 and corr_mat_gt[i, j] == 1.0):
                 outlier_points.append(src_pcd_t[j])
                 outlier_points.append(tgt_pcd[i])
-                outlier_lines.append([i * 2, i * 2 + 1])
+                outlier_lines.append([len(outlier_points) - 2, len(outlier_points) - 1])
     
+    # draw the predicted correspondences
+    line_pred = o3d.geometry.LineSet()
+    line_pred.points = o3d.utility.Vector3dVector(pred_points)
+    line_pred.lines = o3d.utility.Vector2iVector(pred_lines)
+    line_pred.colors = o3d.utility.Vector3dVector([[0, 0.8, 0.2] for i in range(len(pred_lines))])
     # draw the inlier correspondences
     line_inlier = o3d.geometry.LineSet()
     line_inlier.points = o3d.utility.Vector3dVector(inlier_points)
@@ -259,10 +271,15 @@ def corr_visualisation(src_pcd, tgt_pcd, corr_mat_pred, corr_mat_gt, rot_gt, tra
     # draw point clouds and correspondences
     #o3d.visualization.draw_geometries([pcd_model_t, pcd_frame, line_inlier, line_outlier])
     # save all visualisation
+
     o3d.io.write_point_cloud("pcd_model_t.ply", pcd_model_t)
     o3d.io.write_point_cloud("pcd_frame.ply", pcd_frame)
+    o3d.io.write_line_set("line_pred.ply", line_pred)
     o3d.io.write_line_set("line_inlier.ply", line_inlier)
     o3d.io.write_line_set("line_outlier.ply", line_outlier)
+
+    # return the inlier ratio
+    return len(inlier_lines) / len(pred_lines)
     
 
 

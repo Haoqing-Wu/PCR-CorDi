@@ -183,7 +183,9 @@ class LMODataset(data.Dataset):
                     'corr_matrix': corr_matrix.astype(np.float32),
                     'coverage': coverage
                 }
-                data.append(frame_data)
+                for i in range (1000):
+                    data.append(frame_data)
+                break
         with open(self.pickle_file, 'wb') as f:
             pickle.dump(data, f)
         return data

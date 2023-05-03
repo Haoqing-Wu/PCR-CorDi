@@ -15,8 +15,9 @@ class Cordi(Module):
         self.encoder_tgt = PointNetEncoder(args.latent_dim)
         self.diffusion = DiffusionPoint(
             net = PointwiseNet(
-                point_dim=6,
-                context_dim=args.latent_dim * 2,
+                point_dim=3,
+                #context_dim=args.latent_dim * 2,
+                context_dim=0,
                 residual=args.residual
                 ),
             var_sched = VarianceSchedule(
@@ -47,3 +48,6 @@ class Cordi(Module):
         z_tgt = reparameterize_gaussian(mean=z_tgt_mu, logvar=z_tgt_sigma)  # (B, F)
         samples = self.diffusion.sample(x_T, z_src, z_tgt, flexibility=flexibility)
         return samples
+    
+    def get_x_t(self, corr, t):
+        return self.diffusion.get_x_t(corr, t)

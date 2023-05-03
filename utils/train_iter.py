@@ -11,7 +11,7 @@ def train(args, model, optimizer, scheduler, train_iter, val_iter, logger=None):
         for iter_idx in range(args.max_train_iters):
             # set data        
             batch = next(train_iter)
-            corr = batch['corr_matrix'].to(args.device)
+            corr = batch['corr_matrix'].to(args.device)           
             src = batch['src_pcd'].to(args.device)
             tgt = batch['tgt_pcd'].to(args.device)
             # set optimizer
@@ -31,7 +31,7 @@ def train(args, model, optimizer, scheduler, train_iter, val_iter, logger=None):
                 wandb.log({'loss': loss.item()})
             
         if epoch % args.val_freq == 0 and epoch >= args.start_val_epoch:
-            validate(args, model, val_iter, logger)  
+            validate(args, model, train_iter, logger)  
         scheduler.step()
         # save model
         # log
@@ -48,6 +48,7 @@ def validate(args, model, val_iter, logger=None):
         trans = batch['trans']
 
         corr_T = torch.randn([args.val_batch_size, tgt.shape[1], src.shape[1]]).to(args.device)
+        x_T = model.get_x_t(corr.to(args.device), args.num_steps)
         with torch.no_grad():
             model.eval()
             samples = model.sample(corr_T, src, tgt, args.flexibility)
@@ -58,14 +59,14 @@ def validate(args, model, val_iter, logger=None):
                 src_pcd = src[i].cpu().numpy()
                 tgt_pcd = tgt[i].cpu().numpy()
                 pred_corr = samples[i].cpu().numpy()
-                f_loss = focal_loss(gt_corr, pred_corr)
+                #f_loss = focal_loss(gt_corr, pred_corr)
                 pred_corr_pair = get_corr_from_matrix_topk(samples[i].cpu(), 400)
                 pred_corr_matrix = get_corr_matrix(pred_corr_pair, tgt.shape[1], src.shape[1])
-                p_loss = focal_loss(gt_corr, pred_corr_matrix)
-                if iter_idx == 0 and i == 0:
-                    corr_visualisation(src_pcd, tgt_pcd, pred_corr_matrix, gt_corr, gt_rot, gt_trans)
-                print("[Val]Iter: {0}, p_loss: {1}, c_loss: {2}".format(iter_idx, f_loss, p_loss))
+                #p_loss = focal_loss(gt_corr, pred_corr_matrix)
+
+                inlier_ratio = corr_visualisation(src_pcd, tgt_pcd, pred_corr_matrix, gt_corr, gt_rot, gt_trans)
+                print("[Val]Iter: {0}, inlier_ratio: {1}".format(iter_idx, inlier_ratio))
                 if args.logging:
-                    wandb.log({'p_loss': p_loss, 'c_loss': f_loss})
+                    wandb.log({'inlier_ratio': inlier_ratio})
 
     pass

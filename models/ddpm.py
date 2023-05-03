@@ -78,13 +78,13 @@ class PointwiseNet(Module):
         context_b = context_b.view(batch_size, 1, -1)   # (B, 1, F)
 
         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
-        ctx_emb = torch.cat([time_emb, context_a, context_b], dim=-1)    # (B, 1, F+6)
+        #ctx_emb = torch.cat([time_emb, context_a, context_b], dim=-1)    # (B, 1, F+6)
 
-        
+        out=x
         out = x.flatten(start_dim=1)    # (B, N*d)
         out = out.unsqueeze(-1)         # (B, N*d, 1)
         for i, layer in enumerate(self.layers):
-            out = layer(ctx=ctx_emb, x=out)
+            out = layer(ctx=time_emb, x=out)
             if i < len(self.layers) - 1:
                 out = self.act(out)
         out = out.view(batch_size, x.size(1), x.size(2))
@@ -129,13 +129,29 @@ class DiffusionPoint(Module):
 
         c0 = torch.sqrt(alpha_bar).view(-1, 1, 1)       # (B, 1, 1)
         c1 = torch.sqrt(1 - alpha_bar).view(-1, 1, 1)   # (B, 1, 1)
-
-        e_rand = torch.randn_like(x_0)  # (B, N, d)
+        #torch.manual_seed(1001)
+        #e_rand = torch.randn_like(x_0, memory_format=torch.contiguous_format)  # (B, N, d)
+        e_rand = torch.randn_like(x_0)
         e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context_a=context_a, context_b=context_b)
         weight = get_weight_tensor_from_corr(x_0, 100, 1).view(-1, point_dim)
-        loss = weighted_mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), weight)
-        #loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
+        #loss = weighted_mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), weight)
+        loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
+    
+    def get_x_t(self, x_0, t):
+        batch_size, _, point_dim = x_0.size()
+        if t == None:
+            t = self.var_sched.uniform_sample_t(batch_size)
+        alpha_bar = self.var_sched.alpha_bars[t]
+
+        c0 = torch.sqrt(alpha_bar).view(-1, 1, 1)       # (B, 1, 1)
+        c1 = torch.sqrt(1 - alpha_bar).view(-1, 1, 1)   # (B, 1, 1)
+        #torch.manual_seed(1001)
+        #e_rand = torch.randn_like(x_0, memory_format=torch.contiguous_format)  # (B, N, d)
+        e_rand = torch.randn_like(x_0)
+        x_t = c0 * x_0 + c1 * e_rand
+        
+        return x_t
 
     def sample(self, x_T, context_a, context_b, flexibility=0.0, ret_traj=False):
         batch_size = context_a.size(0)
