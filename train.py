@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--augment_noise', type=float, default=0.0001)
     parser.add_argument('--rotated', type=bool, default=False)
     parser.add_argument('--rot_factor', type=float, default=1.)
-    parser.add_argument('--points_limit', type=int, default=50)
+    parser.add_argument('--points_limit', type=int, default=500)
     # Model
     parser.add_argument('--latent_dim', type=int, default=256)
     parser.add_argument('--num_steps', type=int, default=100)
@@ -34,6 +34,9 @@ if __name__ == "__main__":
     parser.add_argument('--sched_mode', type=str, default='linear')
     parser.add_argument('--residual', type=eval, default=True, choices=[True, False])
     parser.add_argument('--flexibility', type=float, default=0.0)
+    parser.add_argument('--truncate_std', type=float, default=2.0)
+    parser.add_argument('--latent_flow_depth', type=int, default=14)
+    parser.add_argument('--latent_flow_hidden_dim', type=int, default=256)
     # Optimizer and scheduler
     parser.add_argument('--lr', type=float, default=0.002)
     parser.add_argument('--weight_decay', type=float, default=0.0)

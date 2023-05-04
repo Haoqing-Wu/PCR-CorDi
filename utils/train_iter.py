@@ -53,7 +53,8 @@ def validate(args, model, val_iter, logger=None):
         corr_vector_T = torch.randn([args.val_batch_size, tgt.shape[1], 3]).to(args.device)
         with torch.no_grad():
             model.eval()
-            samples = model.sample(corr_vector_T, src, tgt, args.flexibility)
+            z = torch.randn([args.val_batch_size, args.latent_dim]).to(args.device)
+            samples = model.sample(z, src, tgt, args.flexibility)
             for i in range(args.val_batch_size):
                 gt_corr_vector = corr_vector[i].numpy()
                 gt_rot = rot[i].numpy()

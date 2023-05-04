@@ -1,5 +1,6 @@
 import torch
 from torch.optim.lr_scheduler import LambdaLR
+import numpy as np
 
 def get_iterator(iterable):
 
@@ -14,6 +15,30 @@ def reparameterize_gaussian(mean, logvar):
     std = torch.exp(0.5 * logvar)
     eps = torch.randn(std.size()).to(mean)
     return mean + std * eps
+
+def gaussian_entropy(logvar):
+    const = 0.5 * float(logvar.size(1)) * (1. + np.log(np.pi * 2))
+    ent = 0.5 * logvar.sum(dim=1, keepdim=False) + const
+    return ent
+
+
+def standard_normal_logprob(z):
+    dim = z.size(-1)
+    log_z = -0.5 * dim * np.log(2 * np.pi)
+    return log_z - z.pow(2) / 2
+
+
+def truncated_normal_(tensor, mean=0, std=1, trunc_std=2):
+    """
+    Taken from https://discuss.pytorch.org/t/implementing-truncated-normal-initializer/4778/15
+    """
+    size = tensor.shape
+    tmp = tensor.new_empty(size + (4,)).normal_()
+    valid = (tmp < trunc_std) & (tmp > -trunc_std)
+    ind = valid.max(-1, keepdim=True)[1]
+    tensor.data.copy_(tmp.gather(-1, ind).squeeze(-1))
+    tensor.data.mul_(std).add_(mean)
+    return tensor
 
 def get_linear_scheduler(optimizer, start_epoch, end_epoch, start_lr, end_lr):
     def lr_func(epoch):

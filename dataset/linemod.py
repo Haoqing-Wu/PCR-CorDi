@@ -190,9 +190,9 @@ class LMODataset(data.Dataset):
                     'shift': shift.astype(np.float32),
                     'scale': scale.astype(np.float32)
                 }
-                for i in range (1000):
-                    data.append(frame_data)
-                break
+                #for i in range (1000):
+                data.append(frame_data)
+                #break
         with open(self.pickle_file, 'wb') as f:
             pickle.dump(data, f)
         return data
