@@ -76,12 +76,12 @@ class PointwiseNet(Module):
         context_b = context_b.view(batch_size, 1, -1)   # (B, 1, F)
 
         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
-        ctx_emb = torch.cat([time_emb, context_a, context_b], dim=-1)    # (B, 1, F+6)
+        #ctx_emb = torch.cat([time_emb, context_a, context_b], dim=-1)    # (B, 1, F+6)
 
         
         out = x
         for i, layer in enumerate(self.layers):
-            out = layer(ctx=ctx_emb, x=out)
+            out = layer(ctx=time_emb, x=out)
             if i < len(self.layers) - 1:
                 out = self.act(out)
 

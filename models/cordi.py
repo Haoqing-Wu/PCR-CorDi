@@ -16,7 +16,8 @@ class Cordi(Module):
         self.diffusion = DiffusionPoint(
             net = PointwiseNet(
                 point_dim=6,
-                context_dim=args.latent_dim * 2,
+                #context_dim=args.latent_dim * 2,
+                context_dim=0,
                 residual=args.residual
                 ),
             var_sched = VarianceSchedule(

@@ -31,7 +31,7 @@ def train(args, model, optimizer, scheduler, train_iter, val_iter, logger=None):
                 wandb.log({'loss': loss.item()})
             
         if epoch % args.val_freq == 0 and epoch >= args.start_val_epoch:
-            validate(args, model, val_iter, logger)  
+            validate(args, model, train_iter, logger)  
             pass
         scheduler.step()
         # save model
