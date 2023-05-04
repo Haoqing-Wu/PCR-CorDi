@@ -37,9 +37,9 @@ class Cordi(Module):
         z_src = reparameterize_gaussian(mean=z_src_mu, logvar=z_src_sigma)  # (B, F)
         z_tgt_mu, z_tgt_sigma = self.encoder_tgt(tgt)
         z_tgt = reparameterize_gaussian(mean=z_tgt_mu, logvar=z_tgt_sigma)  # (B, F)
-        loss = self.diffusion.get_loss(corr, z_src, z_tgt)
+        loss, loss_o, loss_b= self.diffusion.get_loss(corr, z_src, z_tgt)
 
-        return loss
+        return loss, loss_o, loss_b
     
     def sample(self, x_T, src, tgt, flexibility):
         z_src_mu, z_src_sigma = self.encoder_src(src)

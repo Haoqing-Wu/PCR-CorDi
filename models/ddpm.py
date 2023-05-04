@@ -60,6 +60,8 @@ class PointwiseNet(Module):
             ConcatSquashLinear(1, 32, context_dim+3),
             ConcatSquashLinear(32, 64, context_dim+3),
             ConcatSquashLinear(64, 128, context_dim+3),
+            ConcatSquashLinear(128, 256, context_dim+3),
+            ConcatSquashLinear(256, 128, context_dim+3),
             ConcatSquashLinear(128, 64, context_dim+3),
             ConcatSquashLinear(64, 32, context_dim+3),
             ConcatSquashLinear(32, 1, context_dim+3)
@@ -80,9 +82,35 @@ class PointwiseNet(Module):
         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
         #ctx_emb = torch.cat([time_emb, context_a, context_b], dim=-1)    # (B, 1, F+6)
 
-        out=x
-        out = x.flatten(start_dim=1)    # (B, N*d)
-        out = out.unsqueeze(-1)         # (B, N*d, 1)
+        residuals = []
+        down_0=x
+        down_0 = down_0.flatten(start_dim=1)    # (B, N*d)
+        down_0 = down_0.unsqueeze(-1)         # (B, N*d, 1)
+
+        down_1 = self.act(self.layers[0](ctx=time_emb, x=down_0))
+        residuals.append(down_1)
+        down_2 = self.act(self.layers[1](ctx=time_emb, x=down_1))
+        residuals.append(down_2)
+        down_3 = self.act(self.layers[2](ctx=time_emb, x=down_2))
+        residuals.append(down_3)
+        down_4 = self.act(self.layers[3](ctx=time_emb, x=down_3))
+
+        up_0 = down_4
+        up_1 = self.act(self.layers[4](ctx=time_emb, x=up_0))
+        residual = residuals.pop()
+        up_1 = up_1 + residual  
+        up_2 = self.act(self.layers[5](ctx=time_emb, x=up_1))
+        residual = residuals.pop()
+        up_2 = up_2 + residual
+        up_3 = self.act(self.layers[6](ctx=time_emb, x=up_2))
+        residual = residuals.pop()
+        up_3 = up_3 + residual
+        up_4 = self.act(self.layers[7](ctx=time_emb, x=up_3))
+        out = up_4.view(batch_size, x.size(1), x.size(2))
+
+        return out + x
+
+'''
         for i, layer in enumerate(self.layers):
             out = layer(ctx=time_emb, x=out)
             if i < len(self.layers) - 1:
@@ -92,6 +120,7 @@ class PointwiseNet(Module):
             return x + out
         else:
             return out
+'''
         
 class ConcatSquashLinear(Module):
     def __init__(self, dim_in, dim_out, dim_ctx):
@@ -101,6 +130,7 @@ class ConcatSquashLinear(Module):
         self._hyper_gate = Linear(dim_ctx, dim_out)
 
     def forward(self, ctx, x):
+        # use relu as default activation
         gate = torch.sigmoid(self._hyper_gate(ctx))
         bias = self._hyper_bias(ctx)
 
@@ -133,10 +163,13 @@ class DiffusionPoint(Module):
         #e_rand = torch.randn_like(x_0, memory_format=torch.contiguous_format)  # (B, N, d)
         e_rand = torch.randn_like(x_0)
         e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context_a=context_a, context_b=context_b)
-        weight = get_weight_tensor_from_corr(x_0, 100, 1).view(-1, point_dim)
-        #loss = weighted_mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), weight)
-        loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
-        return loss
+        weight_object = get_weight_tensor_from_corr(x_0, 1, 0).view(-1, point_dim)
+        loss_object = weighted_mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), weight_object)
+        weight_background = get_weight_tensor_from_corr(x_0, 0, 1).view(-1, point_dim)
+        loss_background = weighted_mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), weight_background)	
+        loss = loss_object + loss_background
+        #loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
+        return loss, loss_object, loss_background
     
     def get_x_t(self, x_0, t):
         batch_size, _, point_dim = x_0.size()

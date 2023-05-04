@@ -21,5 +21,7 @@ def get_weight_tensor_from_corr(corr, weight_a, weight_b):
 def weighted_mse_loss(tensor_a, tensor_b, weight_tensor):
     squared_diff = torch.pow(tensor_a - tensor_b, 2)
     weighted_squared_diff = squared_diff * weight_tensor
+    # get all none zero elements
+    weighted_squared_diff = weighted_squared_diff[weighted_squared_diff != 0]
     mean_weighted_squared_diff = torch.mean(weighted_squared_diff)
     return mean_weighted_squared_diff
