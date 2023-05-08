@@ -165,8 +165,18 @@ class LMODataset(data.Dataset):
                 if (trans.ndim == 1):
                     trans = trans[:, None]
 
+                tgt_pcd = sort_pcd_from_center(tgt_pcd)
+
                 corr, coverage = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
                 corr_matrix = get_corr_matrix(corr, tgt_pcd.shape[0], src_pcd.shape[0])
+                # let corr_matrix be a diagonal matrix with 0.5 on the diagonal other -1
+                #corr_matrix = np.zeros((tgt_pcd.shape[0], src_pcd.shape[0])) - 1
+                #for i in range(tgt_pcd.shape[0]):
+                    #corr_matrix[i, i] = 0.5
+                
+                
+
+
 
                 
 
@@ -183,9 +193,9 @@ class LMODataset(data.Dataset):
                     'corr_matrix': corr_matrix.astype(np.float32),
                     'coverage': coverage
                 }
-                for i in range (1000):
-                    data.append(frame_data)
-                break
+                #for i in range (1000):
+                data.append(frame_data)
+                #break
         with open(self.pickle_file, 'wb') as f:
             pickle.dump(data, f)
         return data

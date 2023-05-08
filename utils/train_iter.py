@@ -60,7 +60,8 @@ def validate(args, model, val_loader, logger=None):
                 tgt_pcd = tgt[i].cpu().numpy()
                 pred_corr = samples[i].cpu().numpy()
                 #f_loss = focal_loss(gt_corr, pred_corr)
-                pred_corr_pair = get_corr_from_matrix_topk(samples[i].cpu(), 40)
+                pred_corr_matrix_raw = samples[i].cpu()
+                pred_corr_pair = get_corr_from_matrix_topk(pred_corr_matrix_raw, 64)
                 pred_corr_matrix = get_corr_matrix(pred_corr_pair, tgt.shape[1], src.shape[1])
                 #p_loss = focal_loss(gt_corr, pred_corr_matrix)
 
@@ -68,6 +69,11 @@ def validate(args, model, val_loader, logger=None):
                 print("[Val]Iter: {0:3d}, inlier_ratio: {1:5.4f}".format(idx, inlier_ratio))
                 if args.logging:
                     wandb.log({'inlier_ratio': inlier_ratio})
+                    tgt_labels = ['tgt'+str(i) for i in range(tgt.shape[1])]
+                    src_labels = ['src'+str(i) for i in range(src.shape[1])]
+                    wandb.log({'heatmap_raw': wandb.plots.HeatMap(tgt_labels, src_labels, pred_corr_matrix_raw.numpy())})
+                    wandb.log({'heatmap_pred': wandb.plots.HeatMap(tgt_labels, src_labels, pred_corr_matrix)})
+                    wandb.log({'heatmap_gt': wandb.plots.HeatMap(tgt_labels, src_labels, gt_corr)})
                 break #
         break # 
 

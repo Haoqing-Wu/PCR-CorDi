@@ -4,7 +4,7 @@ import torch
 import open3d as o3d
 import numpy as np
 from scipy.spatial import cKDTree
-from focal_loss.focal_loss import FocalLoss
+#from focal_loss.focal_loss import FocalLoss
 
 
 
@@ -92,6 +92,16 @@ def resize_pcd(pcd, points_limit):
     if pcd.shape[0] > points_limit:
         idx = np.random.permutation(pcd.shape[0])[:points_limit]
         pcd = pcd[idx]
+    return pcd
+
+def sort_pcd_from_center(pcd):
+    r"""Sort a point cloud from the center.
+    """
+    center = np.mean(pcd, axis=0)
+    pcd_v = pcd - center
+    dist = np.sqrt(np.sum(np.square(pcd_v), axis=1))
+    idx = np.argsort(dist)
+    pcd = pcd[idx]
     return pcd
 
 def transformation_pcd(pcd, rot, trans):
