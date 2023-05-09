@@ -71,7 +71,7 @@ def validate(args, model, val_loader, logger=None):
                     wandb.log({'inlier_ratio': inlier_ratio})
                     tgt_labels = ['tgt'+str(i) for i in range(tgt.shape[1])]
                     src_labels = ['src'+str(i) for i in range(src.shape[1])]
-                    wandb.log({'heatmap_raw': wandb.plots.HeatMap(tgt_labels, src_labels, pred_corr_matrix_raw.numpy())})
+                    #wandb.log({'heatmap_raw': wandb.plots.HeatMap(tgt_labels, src_labels, pred_corr_matrix_raw.numpy())})
                     wandb.log({'heatmap_pred': wandb.plots.HeatMap(tgt_labels, src_labels, pred_corr_matrix)})
                     wandb.log({'heatmap_gt': wandb.plots.HeatMap(tgt_labels, src_labels, gt_corr)})
                 break #

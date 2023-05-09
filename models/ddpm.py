@@ -196,7 +196,7 @@ class DiffusionPoint(Module):
         
         return x_t
 
-    def sample(self, x_T, context_a, context_b, flexibility=0.0, ret_traj=False):
+    def sample(self, x_T, context_a, context_b=None, flexibility=0.0, ret_traj=False):
         batch_size = context_a.size(0)
         traj = {self.var_sched.num_steps: x_T}
         for t in range(self.var_sched.num_steps, 0, -1):

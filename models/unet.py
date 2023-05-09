@@ -93,10 +93,12 @@ class SimpleUnet(nn.Module):
         self.output = nn.Conv2d(up_channels[-1], 1, out_dim)
 
     def forward(self, x, timestep, context_a):
+        batch_size = x.shape[0]
+        size = x.shape[-1]
         # Embedd time
         t = self.time_mlp(timestep)
         # Initial conv
-        x = self.conv0(x.view(8, 1, 64, 64))
+        x = self.conv0(x.view(batch_size, 1, size, size))
         # Unet
         residual_inputs = []
         for down in self.downs:
@@ -108,4 +110,4 @@ class SimpleUnet(nn.Module):
             x = torch.cat((x, residual_x), dim=1)           
             x = up(x, t, context_a)
         out = self.output(x)
-        return out.view(8, 64, 64)
+        return out.view(batch_size, size, size)

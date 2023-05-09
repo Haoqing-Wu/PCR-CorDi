@@ -164,7 +164,7 @@ class LMODataset(data.Dataset):
                     pass
                 if (trans.ndim == 1):
                     trans = trans[:, None]
-
+                src_pcd = sort_pcd_from_center(src_pcd)
                 tgt_pcd = sort_pcd_from_center(tgt_pcd)
 
                 corr, coverage = get_corr(tgt_pcd, src_pcd, rot, trans, self.corr_radius)
@@ -196,6 +196,8 @@ class LMODataset(data.Dataset):
                 #for i in range (1000):
                 data.append(frame_data)
                 #break
+            
+
         with open(self.pickle_file, 'wb') as f:
             pickle.dump(data, f)
         return data

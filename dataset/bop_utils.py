@@ -255,8 +255,7 @@ def corr_visualisation(src_pcd, tgt_pcd, corr_mat_pred, corr_mat_gt, rot_gt, tra
                 inlier_points.append(src_pcd_t[j])
                 inlier_points.append(tgt_pcd[i])
                 inlier_lines.append([len(inlier_points) - 2, len(inlier_points) - 1])
-            elif (corr_mat_pred[i, j] == 1.0 and corr_mat_gt[i, j] == -1.0) or\
-                  (corr_mat_pred[i, j] == -1.0 and corr_mat_gt[i, j] == 1.0):
+            elif (corr_mat_pred[i, j] == 1.0 and corr_mat_gt[i, j] == -1.0):
                 outlier_points.append(src_pcd_t[j])
                 outlier_points.append(tgt_pcd[i])
                 outlier_lines.append([len(outlier_points) - 2, len(outlier_points) - 1])

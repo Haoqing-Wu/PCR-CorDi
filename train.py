@@ -15,8 +15,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training with CorDi')
     # Dataset
     parser.add_argument("--workers", type=int, default=0)
-    parser.add_argument('--train_batch_size', type=int, default=8)
-    parser.add_argument('--val_batch_size', type=int, default=8)
+    parser.add_argument('--train_batch_size', type=int, default=32)
+    parser.add_argument('--val_batch_size', type=int, default=32)
     parser.add_argument('--data_folder', type=str, default='./data/')
     parser.add_argument('--dataset', type=str, default='lm')
     parser.add_argument('--data_from_pkl', type=bool, default=False)
@@ -34,8 +34,9 @@ if __name__ == "__main__":
     parser.add_argument('--sched_mode', type=str, default='linear')
     parser.add_argument('--residual', type=eval, default=True, choices=[True, False])
     parser.add_argument('--flexibility', type=float, default=0.0)
+
     # Optimizer and scheduler
-    parser.add_argument('--lr', type=float, default=0.002)
+    parser.add_argument('--lr', type=float, default=0.0005)
     parser.add_argument('--weight_decay', type=float, default=0.0)
     # Training
     parser.add_argument('--logging', type=bool, default=True)
@@ -72,7 +73,7 @@ if __name__ == "__main__":
                                  lr=args.lr,
                                  weight_decay=args.weight_decay)
     # set scheduler
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.8)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.98)
     # Training
     train(args, model, optimizer, scheduler, tr_loader, val_loader)
 

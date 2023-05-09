@@ -7,6 +7,7 @@ from utils.common import *
 from models.unet import *
 
 
+
 class Cordi(Module):
 
     def __init__(self, args):
@@ -36,10 +37,13 @@ class Cordi(Module):
         Args:
             x:  Input point clouds, (B, N, d).
         """
+
         z_src_mu, z_src_sigma = self.encoder_src(src)
         z_src = reparameterize_gaussian(mean=z_src_mu, logvar=z_src_sigma)  # (B, F)
         z_tgt_mu, z_tgt_sigma = self.encoder_tgt(tgt)
         z_tgt = reparameterize_gaussian(mean=z_tgt_mu, logvar=z_tgt_sigma)  # (B, F)
+        
+        # Negative ELBO of P(X|z)
         loss, loss_o, loss_b= self.diffusion.get_loss(corr, z_tgt, z_src)
 
         return loss, loss_o, loss_b
