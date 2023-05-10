@@ -281,11 +281,11 @@ def corr_visualisation(src_pcd, tgt_pcd, corr_mat_pred, corr_mat_gt, rot_gt, tra
     #o3d.visualization.draw_geometries([pcd_model_t, pcd_frame, line_inlier, line_outlier])
     # save all visualisation
 
-    o3d.io.write_point_cloud("pcd_model_t.ply", pcd_model_t)
-    o3d.io.write_point_cloud("pcd_frame.ply", pcd_frame)
-    o3d.io.write_line_set("line_pred.ply", line_pred)
-    o3d.io.write_line_set("line_inlier.ply", line_inlier)
-    o3d.io.write_line_set("line_outlier.ply", line_outlier)
+    o3d.io.write_point_cloud("./output/pcd_model_t.ply", pcd_model_t)
+    o3d.io.write_point_cloud("./output/pcd_frame.ply", pcd_frame)
+    o3d.io.write_line_set("./output/line_pred.ply", line_pred)
+    o3d.io.write_line_set("./output/line_inlier.ply", line_inlier)
+    o3d.io.write_line_set("./output/line_outlier.ply", line_outlier)
 
     # return the inlier ratio
     return len(inlier_lines) / len(pred_lines)

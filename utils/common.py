@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from chamfer_distance import ChamferDistance
 
 def get_iterator(iterable):
 
@@ -26,3 +27,9 @@ def weighted_mse_loss(tensor_a, tensor_b, weight_tensor):
     weighted_squared_diff = weighted_squared_diff[weighted_squared_diff != 0]
     mean_weighted_squared_diff = torch.mean(weighted_squared_diff)
     return mean_weighted_squared_diff
+
+def chamfer(pcd1, pcd2):
+    chamfer_dist = ChamferDistance()
+    dist1, dist2, _, _ = chamfer_dist(pcd1, pcd2)
+    loss = torch.mean(dist1) + torch.mean(dist2)
+    return loss

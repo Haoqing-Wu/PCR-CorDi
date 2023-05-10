@@ -1,10 +1,12 @@
 import torch
+import os
 from torch.nn import Module
 
 from models.ddpm import *
 from models.pointnet import *
 from utils.common import *
 from models.unet import *
+from models.autoencoder import *
 
 
 
@@ -13,8 +15,8 @@ class Cordi(Module):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.encoder_src = PointNetEncoder(args.latent_dim)
-        self.encoder_tgt = PointNetEncoder(args.latent_dim)
+        self.encoder_src = Autoencoder(args)
+        self.encoder_tgt = Autoencoder(args)
         self.diffusion = DiffusionPoint(
             net = SimpleUnet(),
             #net = PointwiseNet(
@@ -40,8 +42,9 @@ class Cordi(Module):
 
         z_src_mu, z_src_sigma = self.encoder_src(src)
         z_src = reparameterize_gaussian(mean=z_src_mu, logvar=z_src_sigma)  # (B, F)
-        z_tgt_mu, z_tgt_sigma = self.encoder_tgt(tgt)
-        z_tgt = reparameterize_gaussian(mean=z_tgt_mu, logvar=z_tgt_sigma)  # (B, F)
+        with torch.no_grad():
+            z_tgt_mu, z_tgt_sigma = self.encoder_tgt(tgt)
+            z_tgt = reparameterize_gaussian(mean=z_tgt_mu, logvar=z_tgt_sigma)  # (B, F)
         
         # Negative ELBO of P(X|z)
         loss, loss_o, loss_b= self.diffusion.get_loss(corr, z_tgt, z_src)

@@ -133,3 +133,9 @@ dmypy.json
 
 # logging directory
 /wandb
+
+# checkpoing directory
+/ckpt
+
+# output directory
+/output
