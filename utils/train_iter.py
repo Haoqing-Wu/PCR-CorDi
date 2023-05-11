@@ -9,10 +9,11 @@ def train(args, model, optimizer, scheduler, tr_loader, val_loader, logger=None)
 
         # train
         for idx, batch in enumerate(tr_loader):
-            # set data        
-            corr = batch['corr_matrix'].to(args.device)           
+            # set data                  
             src = batch['src_pcd'].to(args.device)
             tgt = batch['tgt_pcd'].to(args.device)
+            batch_size = src.shape[0]
+            
             # set optimizer
             optimizer.zero_grad()
             model.train()
